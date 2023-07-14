@@ -1,35 +1,31 @@
 <template>
     <div class="col">
-        <div @click="viewListing" class="card shadow-sm">
-            <img class="bd-placeholder-img card-img-top"  v-if="this.listing.attributes.images === undefined || this.listing.attributes.images.data === null"
+        <div @click="viewListing($event, listing)" class="card shadow-sm">
+            <img class="bd-placeholder-img card-img-top"  v-if="listing.attributes.images === undefined || listing.attributes.images.data === null"
              src="https://italiancinemaaudiences.org/wp-content/themes/trend/assets/img/empty/424x500.png" width="100%" height="225" xmlns="" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="true">
-             <img class="bd-placeholder-img card-img-top"  v-else :src="'http://localhost:1337' + this.listing.attributes.images.data[0].attributes.url"  width="100%" height="225" 
+             <img class="bd-placeholder-img card-img-top"  v-else :src="'http://localhost:1337' + listing.attributes.images.data[0].attributes.url"  width="100%" height="225" 
              xmlns="" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="true">
             <rect width="100%" height="100%" fill="#55595c"></rect>
             <div class="card-body">
-                <p class="card-text">{{ this.listing.attributes.title }}</p>
+                <p class="card-text">{{ listing.attributes.title }}</p>
             </div>
         </div>
     </div>
         
 </template>
 
-<script>
-    export default{
-        name: "ListingPreview",
-        props:{
-            listing:Object
-        },
-        methods:{
-            viewListing(e){
-                e.preventDefault();
+<script setup>
+    const props = defineProps({
+        listing:Object
+    })
 
-                console.log("listing:", this.listing)
+    async function viewListing(e, listing){
+        e.preventDefault();
 
-                this.$router.push({ name:"viewListing", params:{ "id":this.listing.id }  })
-            }
-        }
-    }
+        console.log("listing:", listing)
+
+        return await navigateTo({ path:'/listing/'+listing.id})
+    }    
 </script>
 
 <style>

@@ -1,4 +1,0 @@
-<template>
-  <BSNavbar/>
-  <NuxtPage />
-</template>

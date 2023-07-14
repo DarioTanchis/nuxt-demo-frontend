@@ -5,28 +5,27 @@
         aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        
         <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
                 <li class="nav-item active">
-                    <a class="nav-link" @click="goToHome">Home<span v-if="this.isHome" class="sr-only">(current)</span></a>
+                    <a class="nav-link" @click="goToHome">Home<span v-if="isHome" class="sr-only">(current)</span></a>
                 </li>
                 <li v-if="isSignedIn === false" class="nav-item">
-                    <a class="nav-link" @click="goToLogin">Accedi<span v-if="this.isLogin" class="sr-only">(current)</span></a>
+                    <a class="nav-link" @click="goToLogin">Accedi<span v-if="isLogin" class="sr-only">(current)</span></a>
                 </li>
                 <li v-if="isSignedIn === false" class="nav-item">
-                    <a class="nav-link" @click="goToSignup">Registrati<span v-if="this.isSignup" class="sr-only">(current)</span></a>
+                    <a class="nav-link" @click="goToSignup">Registrati<span v-if="isSignup" class="sr-only">(current)</span></a>
                 </li>
-                <li v-if="this.$route.name === 'home'" class="nav-item dropdown">
+                <li v-if="$route.name === 'home'" class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    {{ this.category === '' ? 'Seleziona categoria' : this.category }}
+                    {{ category === '' ? 'Seleziona categoria' : category }}
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                        <li v-for="c in this.categories"><a class="dropdown-item" @click="CategoryFilter($event, c.attributes.name)">{{ c.attributes.name }}</a></li>
-                        <li v-if="this.category !== ''"><a class="dropdown-item" @click="CategoryFilter($event, '')"> Nessun categoria</a></li>
+                        <li v-for="c in categories"><a class="dropdown-item" @click="">{{ c.attributes.name }}</a></li>
+                        <li v-if="category !== ''"><a class="dropdown-item" @click=""> Nessun categoria</a></li>
                     </ul>
                 </li>
-                <li v-if="this.isSignedIn === true" class="nav-item dropdown">
+                <li v-if="isSignedIn === true" class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     {{ userStore.user !== undefined ? userStore.user.username : '' }}
                     </a>
@@ -40,9 +39,9 @@
             </ul>   
             <div class="nav-item">
                 <ul class="navbar-nav mr-auto">
-                    <li v-if="this.isSignedIn && this.isHome" class="nav-item"> <button type="button" class="nav-button btn btn-primary" @click="ViewOwnListings">
+                    <li v-if="isSignedIn && this.isHome" class="nav-item"> <button type="button" class="nav-button btn btn-primary" @click="ViewOwnListings">
                         {{ searchStore.viewOwnListings === true ? 'Indietro' : 'Visualizza i tuoi annunci' }}</button></li>
-                    <li v-if="this.isSignedIn" class="nav-item"> <button type="button" class="nav-button btn btn-danger" @click="InsertListing">Inserisci annuncio</button></li>
+                    <li v-if="isSignedIn" class="nav-item"> <button type="button" class="nav-button btn btn-danger" @click="InsertListing">Inserisci annuncio</button></li>
                     <li class="nav-item"> 
                         <form v-if="isHome" class="form-inline">
                             <ul class="navbar-nav mr-auto">
@@ -52,49 +51,54 @@
                         </form>    
                     </li>
                 </ul>
-            </div>
-            
+            </div> 
         </div>
     </nav>
 </template>
 
-<script>
-    import router from '@/router';
+<script setup>
+    import { useUserStore } from "@/stores/user"
+
+    const userStore = useUserStore();
+
+    let isHome = false;
+    const categories = []
+    let isLogin = false
+    let isSignup = false
+    let isInsertListing = false 
+    const searchString = userStore.search
+    const category = ''
+    let isSignedIn = false
+
+    const route = useRoute()
+
+    isHome = route.path === '/';
+    isLogin = route.path === '/Login';
+    isSignup = route.path === '/Signup';
+    isInsertListing = route.path === '/InsertListing'
+    
+    isSignedIn = userStore.jwt !== undefined && userStore.jwt.length > 1
+/*
     import { useUserStore } from "@/stores/user";
     import { useSearchStore } from '@/stores/search';
     import { useCategoriesStore } from '@/stores/categories'
+
+    const userStore = useUserStore($pinia);
+    const searchStore = useSearchStore($pinia);
 
     export default{
         name:"BSNavbar",
         data(){
             return{
                 categories: Array,
-                userStore: useUserStore(),
                 isHome: Boolean,
                 isLogin: Boolean,
                 isSignup: Boolean,
                 isInsertListing: Boolean,
                 searchString:'',
                 category:'',
-                searchStore:useSearchStore(),
                 isSignedIn: false
             }
-        },
-        watch: {
-            '$route': function (from, to) {
-                if(from !== to){
-                    console.log("new route set");
-
-                    this.isHome = this.$route.name === 'home';
-                    this.isLogin = this.$route.name === 'login';
-                    this.isSignup = this.$route.name === 'signup';
-                    this.isInsertListing = this.$route.name === 'insertListing'
-                    
-                    this.isSignedIn = this.userStore.jwt !== undefined && this.userStore.jwt.length > 1
-                }else{
-                    console.log("page refresh")
-                }
-            }   
         },
         async created(){
             this.categories = await this.fetchCategories();
@@ -161,7 +165,7 @@
                 this.searchStore.setViewOwnListings();
             }
         },
-    }
+    }*/
 </script>
 
 <style>

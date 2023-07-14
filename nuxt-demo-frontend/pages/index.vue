@@ -1,11 +1,54 @@
 <template>
-    <main>
-        {{ console.log("listings data in home", this.listings) }}
-        <Listings v-bind:listingsData="this.listings"/>
-    </main>
+    <div>
+        <BSNavbar/>
+        <main>
+            {{ console.log("listings data in home", listings) }}
+            <Listings v-bind:listingsData="listings"/>
+        </main>
+    </div>
+    <NuxtPage/> 
 </template>
+  
+<script setup>
+    import BSNavbar from '~/components/BSNavbar.vue';
+    import { useSearchStore } from '@/stores/search';
+    import { useUserStore } from '@/stores/user'
+    import axios from 'axios';
 
-<script>
+    const searchStore = useSearchStore();
+    const userStore = useUserStore()
+
+    const jwt = userStore.jwt;
+    console.log("jwt",userStore.jwt)
+
+    const listings = await getListings();
+    console.log("listings", listings)
+
+    async function getListings(){
+        //const res = await fetch("http://localhost:1337/api/listings?populate=images,category,madeby")
+        const res = await axios.get("http://127.0.0.1:1337/api/listings?populate=images,category,madeby")
+
+        //const response = await res.json();
+
+        return res.data.data;
+    };
+
+    async function filterListings(state){
+        const ls = await getListings();
+        console.log("listings before filter: ", ls)
+
+        console.log(userStore.user.id)
+
+        listings = ls.filter( l => state === undefined || (l.attributes.title.includes(state.search) && 
+        (state.category === '' || l.attributes.category.data.attributes.name === state.category) &&
+        (state.viewOwnListings === false ? l.attributes.madeby.data.id !== userStore.user.id : l.attributes.madeby.data.id === userStore.user.id)))
+
+        console.log("listings after filter", listings)
+    };
+</script>
+
+<!--
+    <script>
     import Listings from "@/components/Listings"
     import { useSearchStore } from "@/stores/search"
     import { useUserStore } from "@/stores/user"
@@ -70,7 +113,4 @@
     }
     
 </script>
-
-<style>
-
-</style>
+-->
