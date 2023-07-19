@@ -10,22 +10,22 @@
                 <li class="nav-item active">
                     <a class="nav-link" @click="goToHome">Home<span v-if="isHome" class="sr-only">(current)</span></a>
                 </li>
-                <li v-if="isSignedIn === false" class="nav-item">
+                <li v-if="userStore.loggedIn === false" class="nav-item">
                     <a class="nav-link" @click="goToLogin">Accedi<span v-if="isLogin" class="sr-only">(current)</span></a>
                 </li>
-                <li v-if="isSignedIn === false" class="nav-item">
+                <li v-if="userStore.loggedIn === false" class="nav-item">
                     <a class="nav-link" @click="goToSignup">Registrati<span v-if="isSignup" class="sr-only">(current)</span></a>
                 </li>
-                <li v-if="$route.name === 'home'" class="nav-item dropdown">
+                <li v-if="isHome" class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     {{ category === '' ? 'Seleziona categoria' : category }}
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                        <li v-for="c in categories"><a class="dropdown-item" @click="">{{ c.attributes.name }}</a></li>
-                        <li v-if="category !== ''"><a class="dropdown-item" @click=""> Nessun categoria</a></li>
+                        <li v-for="c in categories"><a class="dropdown-item" @click="CategoryFilter($event, c.attributes.name)">{{ c.attributes.name }}</a></li>
+                        <li v-if="category !== ''"><a class="dropdown-item" @click="CategoryFilter($event, '')"> Nessun categoria</a></li>
                     </ul>
                 </li>
-                <li v-if="isSignedIn === true" class="nav-item dropdown">
+                <li v-if="userStore.loggedIn" class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     {{ userStore.user !== undefined ? userStore.user.username : '' }}
                     </a>
@@ -37,16 +37,19 @@
                     
                 </li>
             </ul>   
-            <div class="nav-item">
+            <div class="nav-item" style="margin-right: 1rem;">
                 <ul class="navbar-nav mr-auto">
-                    <li v-if="isSignedIn && this.isHome" class="nav-item"> <button type="button" class="nav-button btn btn-primary" @click="ViewOwnListings">
-                        {{ searchStore.viewOwnListings === true ? 'Indietro' : 'Visualizza i tuoi annunci' }}</button></li>
-                    <li v-if="isSignedIn" class="nav-item"> <button type="button" class="nav-button btn btn-danger" @click="InsertListing">Inserisci annuncio</button></li>
+   
+                        <li v-if="userStore.loggedIn && this.isHome" class="nav-item"> <button type="button" class="nav-button btn btn-primary" @click="ViewOwnListings">
+                            {{ searchStore.viewOwnListings === true ? 'Indietro' : 'Visualizza i tuoi annunci' }}</button>
+                        </li>
+                        <li v-if="userStore.loggedIn" class="nav-item"> <button type="button" class="nav-button btn btn-danger" @click="InsertListing">Inserisci annuncio</button></li>
+       
                     <li class="nav-item"> 
                         <form v-if="isHome" class="form-inline">
                             <ul class="navbar-nav mr-auto">
                                 <li class="nav-item"><input v-model="searchString" class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search"></li>
-                                <li class="nav-item"><button class="btn btn-outline-success" type="submit" @click="this.Search">Cerca</button></li>
+                                <li class="nav-item"><button class="btn btn-outline-success" type="submit" @click="Search">Cerca</button></li>
                             </ul>
                         </form>    
                     </li>
@@ -57,18 +60,17 @@
 </template>
 
 <script setup>
-    import { useUserStore } from "@/stores/user"
-
     const userStore = useUserStore();
+    const searchStore = useSearchStore();
+    const listingsStore = useListingsStore();
 
     let isHome = false;
-    const categories = []
+    const categories = await fetchCategories();
     let isLogin = false
     let isSignup = false
     let isInsertListing = false 
-    const searchString = userStore.search
-    const category = ''
-    let isSignedIn = false
+    let searchString = userStore.search
+    let category = ref('')
 
     const route = useRoute()
 
@@ -76,8 +78,79 @@
     isLogin = route.path === '/Login';
     isSignup = route.path === '/Signup';
     isInsertListing = route.path === '/InsertListing'
-    
-    isSignedIn = userStore.jwt !== undefined && userStore.jwt.length > 1
+
+    onMounted( () => {
+        userStore.initialise();
+        searchStore.initialise();
+    });
+
+    async function fetchCategories(){
+        const { data, pending, error, refresh } = await useFetch("http://localhost:1337/api/categories")
+
+        console.log(data)
+
+        return data.value.data;
+    };
+
+    async function goToLogin(e){
+        e.preventDefault();
+
+        await navigateTo({ path: '/login' })
+    };
+
+    async function goToSignup(e){
+        e.preventDefault();
+        
+        await navigateTo({ path: '/signup' })
+
+        console.log("go to signup")
+    };
+
+    async function goToHome(e){
+        e.preventDefault();
+
+        await navigateTo({ path: '/' })
+
+        console.log("go to home")
+    };
+
+    function logout(e){
+        e.preventDefault();
+
+        this.isSignedIn = false
+
+        this.userStore.Logout();
+    };
+
+    function Search(e){
+        e.preventDefault();
+
+        console.log(searchString)
+
+        searchStore.setSearch(searchString)
+    };
+
+    function CategoryFilter(e, cat){
+        e.preventDefault();
+
+        console.log(cat)
+
+        category.value = cat
+
+        searchStore.setCat(cat);
+    };
+
+    async function InsertListing(e){
+        e.preventDefault();
+
+        await navigateTo({ path: '/insertListing' })
+    };
+
+    function ViewOwnListings(e){
+        e.preventDefault();
+
+        this.searchStore.setViewOwnListings();
+    };
 /*
     import { useUserStore } from "@/stores/user";
     import { useSearchStore } from '@/stores/search';

@@ -1,7 +1,8 @@
 <template>
+    <BSNavbar/>
     <main>
         <div class="container align-items-start">
-            <div class="card" style="width: 40rem;">
+            <div class="card" style="width: 40rem; margin-right: auto; margin-left: auto; margin-top: 2rem; margin-bottom: 2rem;">
                 <img class="card-img-top" v-if="listing.images === undefined || listing.images.data === null"
                 src="https://italiancinemaaudiences.org/wp-content/themes/trend/assets/img/empty/424x500.png" style="max-height: 30rem; white-space:nowrap" alt="Card image cap">
                 <div v-else id="carouselExampleControls" class="carousel slide" data-ride="carousel">
@@ -42,10 +43,8 @@
                             <div v-if="listing.email" class="col-md-auto">
                                 {{ listing.email }}
                             </div>
-                            <div class="col-md-auto">
-                                <div class="vr">
-
-                                </div>
+                            <div v-if="listing.email && listing.phone" class="col-md-auto">
+                                <div class="vr"></div>
                             </div>
                             <div v-if="listing.phone" class="col-md-auto">
                                 {{ listing.phone }}
@@ -54,26 +53,24 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div>  
     </main>
 </template>
 
-<script>
+<script setup>
     const route = useRoute();
 
     console.log(route.params)
     const { id } = route.params;
     let index = 0;
-    const listing = fetchListing();
+    let listing = await fetchListing();
 
     async function fetchListing(){
-        const res = await fetch("http://localhost:1337/api/listings/"+$route.params.id+"?populate=images" )
+        const res = await fetch("http://127.0.0.1:1337/api/listings/"+route.params.id+"?populate=images" )
 
         const data = await res.json();
 
-        listing = data.data.attributes;
-
-        console.log(listing)
+        return data.data.attributes;
     };
 
     function nextImage(e){

@@ -5,15 +5,10 @@
                 <ListingPreview v-for="l in listingsData" v-bind:listing="l"/>
             </div>
         </div>
-        </div>
-        <div class="listings">
-        <ListingPreview v-for="l in listingsData" v-bind:listing="l"/>
     </div>
 </template>
 
 <script setup>
-    import ListingPreview from "@/components/ListingPreview.vue"
-
     const props = defineProps({
         listingsData: Array
     })

@@ -29,6 +29,8 @@ export const useSearchStore = defineStore('search', {
     setCat(c){
       this.category = c
 
+      console.log("cat",this.category)
+
       this.updateLocalStorage();
     },
     setViewOwnListings(){
@@ -40,7 +42,8 @@ export const useSearchStore = defineStore('search', {
       this.updateLocalStorage();
     },
     updateLocalStorage(){
-      localStorage.setItem('search-store', `{"search":"${this.search}", "category":"${this.category}", "viewOwnListings":${this.viewOwnListings}}`)
+      console.log("updating storage",this.search, this.category, this.viewOwnListings)
+      localStorage.setItem('search-store', `{"search":"${this.search === undefined ? '' : this.search}", "category":"${this.category}", "viewOwnListings":${this.viewOwnListings}}`)
     }
   }
 })

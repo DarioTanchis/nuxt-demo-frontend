@@ -4,10 +4,21 @@ export default defineNuxtConfig({
   css: ["bootstrap/dist/css/bootstrap.min.css"],
   modules: [
     // ...
-    '@pinia/nuxt',
+    [
+      '@pinia/nuxt', 
+      {
+        autoImports: ['defineStore', 'acceptHMRUpdate'],
+      },
+    ],
     '@vueuse/nuxt',
   ],
   experimental: {
     renderJsonPayloads: false
-  }
+  },
+  routeRules:{
+    '/': { ssr:false }
+  },
+  imports: {
+    dirs: ["stores"],
+  },
 })

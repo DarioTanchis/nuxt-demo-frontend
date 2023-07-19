@@ -2,7 +2,8 @@
     <div class="col">
         <div @click="viewListing($event, listing)" class="card shadow-sm">
             <img class="bd-placeholder-img card-img-top"  v-if="listing.attributes.images === undefined || listing.attributes.images.data === null"
-             src="https://italiancinemaaudiences.org/wp-content/themes/trend/assets/img/empty/424x500.png" width="100%" height="225" xmlns="" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="true">
+             src="https://italiancinemaaudiences.org/wp-content/themes/trend/assets/img/empty/424x500.png" width="100%" height="225" xmlns="" role="img" aria-label="Placeholder: Thumbnail" 
+             preserveAspectRatio="xMidYMid slice" focusable="true">
              <img class="bd-placeholder-img card-img-top"  v-else :src="'http://localhost:1337' + listing.attributes.images.data[0].attributes.url"  width="100%" height="225" 
              xmlns="" role="img" aria-label="Placeholder: Thumbnail" preserveAspectRatio="xMidYMid slice" focusable="true">
             <rect width="100%" height="100%" fill="#55595c"></rect>

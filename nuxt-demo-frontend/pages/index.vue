@@ -2,48 +2,63 @@
     <div>
         <BSNavbar/>
         <main>
-            {{ console.log("listings data in home", listings) }}
-            <Listings v-bind:listingsData="listings"/>
+            <ClientOnly>
+                <Listings v-bind:listingsData="listings"/>
+            </ClientOnly>
         </main>
     </div>
-    <NuxtPage/> 
 </template>
   
 <script setup>
-    import BSNavbar from '~/components/BSNavbar.vue';
-    import { useSearchStore } from '@/stores/search';
-    import { useUserStore } from '@/stores/user'
-    import axios from 'axios';
-
+    const listingsStore = useListingsStore();
     const searchStore = useSearchStore();
-    const userStore = useUserStore()
+    //const userStore = useUserStore()
 
-    const jwt = userStore.jwt;
-    console.log("jwt",userStore.jwt)
+    onMounted(() => {
+        useUserStore().initialise();
+        useSearchStore().initialise();
 
-    const listings = await getListings();
-    console.log("listings", listings)
+        jwt = useUserStore().jwt;
+
+        console.log("stored jwt", jwt)
+    })
+
+    let jwt = "";
+
+    const listings = ref([]);
+
+    watch(searchStore, async () => {
+        listings.value = await filterListings()
+    })
 
     async function getListings(){
-        //const res = await fetch("http://localhost:1337/api/listings?populate=images,category,madeby")
-        const res = await axios.get("http://127.0.0.1:1337/api/listings?populate=images,category,madeby")
+        try{
+            //const res = await fetch("http://localhost:1337/api/listings?populate=images,category,madeby")
+            const { data, pending, error, refresh } = await useFetch("http://127.0.0.1:1337/api/listings?populate=images,category,madeby")
 
-        //const response = await res.json();
+            //const response = await res.json();
 
-        return res.data.data;
+            return data._value.data;
+        }
+        catch(err){
+            console.log(err)
+        }        
     };
 
-    async function filterListings(state){
+    async function filterListings(){
         const ls = await getListings();
-        console.log("listings before filter: ", ls)
 
-        console.log(userStore.user.id)
+        const userStore = useUserStore();
 
-        listings = ls.filter( l => state === undefined || (l.attributes.title.includes(state.search) && 
-        (state.category === '' || l.attributes.category.data.attributes.name === state.category) &&
-        (state.viewOwnListings === false ? l.attributes.madeby.data.id !== userStore.user.id : l.attributes.madeby.data.id === userStore.user.id)))
+        const state = useSearchStore();
 
-        console.log("listings after filter", listings)
+        const filtered = ls.filter( l => state === undefined || (
+            (state.search === undefined || l.attributes.title.includes(state.search)) && 
+            (state.category === '' || l.attributes.category.data.attributes.name === state.category) &&
+            (state.viewOwnListings === false ? l.attributes.madeby === undefined || l.attributes.madeby.data.id !== userStore.user.id : 
+        l.attributes.madeby === undefined || l.attributes.madeby.data.id === userStore.user.id)))
+
+        return filtered;
     };
 </script>
 

@@ -1,6 +1,4 @@
-import { defineStore } from 'pinia'
 import { useStorage } from '@vueuse/core';
-import { watch } from 'vue';
 
 export const useUserStore = defineStore('user', {
   state: () => {
@@ -9,10 +7,12 @@ export const useUserStore = defineStore('user', {
         user: Object
     }
   },
+  getters: {
+    loggedIn: (state) => state.jwt !== undefined && state.jwt.length > 1
+  },
   actions:{
     initialise(){
       const storage = useStorage('user-store',{ jwt:'', user:Object },localStorage,{ mergeDefaults: true })
-
 
       let data = JSON.parse(localStorage.getItem("user-store"))
 
