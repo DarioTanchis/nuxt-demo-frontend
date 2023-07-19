@@ -40,10 +40,10 @@
             <div class="nav-item" style="margin-right: 1rem;">
                 <ul class="navbar-nav mr-auto">
    
-                        <li v-if="userStore.loggedIn && this.isHome" class="nav-item"> <button type="button" class="nav-button btn btn-primary" @click="ViewOwnListings">
+                        <li v-if="userStore.loggedIn && isHome" class="nav-item"> <button type="button" class="nav-button btn btn-primary" @click="ViewOwnListings">
                             {{ searchStore.viewOwnListings === true ? 'Indietro' : 'Visualizza i tuoi annunci' }}</button>
                         </li>
-                        <li v-if="userStore.loggedIn" class="nav-item"> <button type="button" class="nav-button btn btn-danger" @click="InsertListing">Inserisci annuncio</button></li>
+                        <li v-if="userStore.loggedIn && isInsertListing === false" class="nav-item"> <button type="button" class="nav-button btn btn-danger" @click="InsertListing">Inserisci annuncio</button></li>
        
                     <li class="nav-item"> 
                         <form v-if="isHome" class="form-inline">
@@ -62,32 +62,36 @@
 <script setup>
     const userStore = useUserStore();
     const searchStore = useSearchStore();
-    const listingsStore = useListingsStore();
 
     let isHome = false;
     const categories = await fetchCategories();
     let isLogin = false
     let isSignup = false
     let isInsertListing = false 
-    let searchString = userStore.search
-    let category = ref('')
+    let searchString = ref(searchStore.search)
+    let category = ref(searchStore.category)
 
     const route = useRoute()
 
     isHome = route.path === '/';
-    isLogin = route.path === '/Login';
-    isSignup = route.path === '/Signup';
-    isInsertListing = route.path === '/InsertListing'
+    isLogin = route.path === '/login';
+    isSignup = route.path === '/signup';
+    isInsertListing = route.path === '/insertListing'
 
     onMounted( () => {
         userStore.initialise();
         searchStore.initialise();
+
+        searchString.value = searchStore.search;
+        category.value = searchStore.category;
     });
 
     async function fetchCategories(){
         const { data, pending, error, refresh } = await useFetch("http://localhost:1337/api/categories")
 
         console.log(data)
+
+        useCategoriesStore().$patch({ categories:data.value.data })
 
         return data.value.data;
     };
@@ -117,9 +121,7 @@
     function logout(e){
         e.preventDefault();
 
-        this.isSignedIn = false
-
-        this.userStore.Logout();
+        userStore.Logout();
     };
 
     function Search(e){
@@ -149,7 +151,7 @@
     function ViewOwnListings(e){
         e.preventDefault();
 
-        this.searchStore.setViewOwnListings();
+        searchStore.setViewOwnListings();
     };
 /*
     import { useUserStore } from "@/stores/user";

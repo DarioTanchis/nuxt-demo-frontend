@@ -6,8 +6,8 @@
                 <img class="card-img-top" v-if="listing.images === undefined || listing.images.data === null"
                 src="https://italiancinemaaudiences.org/wp-content/themes/trend/assets/img/empty/424x500.png" style="max-height: 30rem; white-space:nowrap" alt="Card image cap">
                 <div v-else id="carouselExampleControls" class="carousel slide" data-ride="carousel">
-                    <div v-for="(img, index) in listing.images.data" class="carousel-inner">
-                        <div class="carousel-item" :class=" index === index ? 'active' : ''">
+                    <div v-for="(img, i) in listing.images.data" class="carousel-inner">
+                        <div class="carousel-item" :class="i === index ? 'active' : ''">
                             <img class="d-block card-img-top" style="max-height: 45rem;" :src="'http://localhost:1337'+img.attributes.url">
                         </div>
                     </div>
@@ -15,7 +15,6 @@
                         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                         <span class="sr-only">Previous</span>
                     </a>
-                    {{ console.log(listing.images.data.length) }}
                     <a v-if="listing.images.data.length > 1" class="carousel-control-next" @click="nextImage" role="button" data-slide="next">
                         <span class="carousel-control-next-icon" aria-hidden="true"></span>
                         <span class="sr-only">Next</span>
@@ -62,7 +61,7 @@
 
     console.log(route.params)
     const { id } = route.params;
-    let index = 0;
+    const index = ref(0);
     let listing = await fetchListing();
 
     async function fetchListing(){
@@ -78,17 +77,21 @@
 
         const carouselItems = document.getElementsByClassName("carousel-item");
 
-        index = (index + 1) % carouselItems.length;
+        index.value = (index.value + 1) % carouselItems.length;
+
+        console.log(index.value)
     };
     function prevImage(e){
         e.preventDefault();
 
         const carouselItems = document.getElementsByClassName("carousel-item");
 
-        index = (index - 1) % carouselItems.length;
+        index.value = (index.value - 1) % carouselItems.length;
 
-        if(index  < 0)
-            index = carouselItems.length - 1;
+        if(index.value  < 0)
+            index.value = carouselItems.length - 1;
+
+        console.log(index.value)
     };
 
     /*

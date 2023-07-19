@@ -10,6 +10,8 @@
 </template>
   
 <script setup>
+import axios from 'axios';
+
     const listingsStore = useListingsStore();
     const searchStore = useSearchStore();
     //const userStore = useUserStore()
@@ -27,6 +29,8 @@
 
     const listings = ref([]);
 
+    listings.value = await filterListings()
+
     watch(searchStore, async () => {
         listings.value = await filterListings()
     })
@@ -34,11 +38,14 @@
     async function getListings(){
         try{
             //const res = await fetch("http://localhost:1337/api/listings?populate=images,category,madeby")
-            const { data, pending, error, refresh } = await useFetch("http://127.0.0.1:1337/api/listings?populate=images,category,madeby")
+           
+            console.log(`Bearer ${useUserStore().jwt}`)
+            const res = await axios.get("http://localhost:1337/api/listings?populate=images,category,madeby", 
+                { headers: { Authorization: "Bearer " + useUserStore().jwt } })
 
-            //const response = await res.json();
 
-            return data._value.data;
+            return res.data.data;
+
         }
         catch(err){
             console.log(err)
@@ -52,11 +59,15 @@
 
         const state = useSearchStore();
 
+        console.log(ls)
+
         const filtered = ls.filter( l => state === undefined || (
-            (state.search === undefined || l.attributes.title.includes(state.search)) && 
+            (state.search === undefined || state.search === '' || l.attributes.title.includes(state.search)) && 
             (state.category === '' || l.attributes.category.data.attributes.name === state.category) &&
-            (state.viewOwnListings === false ? l.attributes.madeby === undefined || l.attributes.madeby.data.id !== userStore.user.id : 
-        l.attributes.madeby === undefined || l.attributes.madeby.data.id === userStore.user.id)))
+            (state.viewOwnListings === false ? (l.attributes.madeby == null || l.attributes.madeby.data == null || l.attributes.madeby.data.id !== userStore.user.id) : 
+        l.attributes.madeby == null || l.attributes.madeby.data !== null && l.attributes.madeby.data.id === userStore.user.id)))
+
+        console.log("filtered listings", filtered)
 
         return filtered;
     };

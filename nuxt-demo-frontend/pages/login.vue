@@ -1,4 +1,5 @@
 <template>
+    <BSNavbar/>
     <div id="background">
         <section class="vh-100" id = "mysection">
             <div class="container py-5 h-100">
