@@ -37,7 +37,7 @@
                         <h5 class="mt-3">Descrizione</h5>
                         <p class="card-text">{{ listing.description }}</p>
 
-                        <h4 class="mt-3" v-if="listing.email !== null || listing.phone !== null">Contatti</h4>
+                        <h4 class="mt-3" v-if="listing.email !== null && listing.email !== '' || listing.phone !== null && listing.phone !== ''">Contatti</h4>
                         <div class="row ">
                             <div v-if="listing.email" class="col-md-auto">
                                 {{ listing.email }}
@@ -53,9 +53,8 @@
                             <div v-if="listing.madeby !== undefined && listing.madeby.data !== undefined 
                             && listing.madeby.data !== null && listing.madeby !== ''" class="row">
                                 <div class="col-md-auto">
-
                                     {{ console.log("madeby", listing.madeby) }}
-                                    Pubblicato da {{ listing.madeby.data.attributes.username }}
+                                    <h6>Pubblicato da {{ listing.madeby.data.attributes.username }}</h6>
                                 </div>
                             </div>
                             <div class="row" v-if="listing.madeby !== undefined && listing.madeby.data.id === userStore.user.id">

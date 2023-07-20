@@ -7,11 +7,15 @@
                     <form style="">
                         <div class="form-group mb-3">
                             <label for="formTitle" class="form-label">Titolo</label>
-                            <input v-model="title" class="form-control" type="text" id="formTitle" multiple>
+                            <input v-model="title" aria-describedby="titleFeedback" :class="this.submitted ? (this.titleError ? 'is-invalid' : 'is-valid'):''" 
+                                class="form-control" type="text" id="formTitle" multiple>
+                            <div id="titleFeedback" class="invalid-feedback">
+                                Il titolo non può essere vuoto e deve avere minimo 2 caratteri
+                            </div>
                         </div>
 
                         <div v-if="this.images !== undefined && this.images.length > 0" 
-                        id="carouselExampleControls" class="carousel slide" data-ride="carousel">
+                            id="carouselExampleControls" class="carousel slide" data-ride="carousel">
                             <div v-for="(img, index) in this.imagesUrls" class="carousel-inner">
                                 <div class="carousel-item" :class=" index === this.imageIndex ? 'active' : ''">
                                     <img class="d-block card-img-top" :src="img">
@@ -36,14 +40,22 @@
                             <button class="btn btn-secondary dropdown-toggle" type="button" id="catDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 {{ this.category === '' ? 'Seleziona Categoria' : this.category }}
                             </button>
-                            <ul class="dropdown-menu" aria-labelledby="catDropdown">
+                            <ul class="dropdown-menu" :class="this.submitted ? (this.catError ? 'is-invalid' : 'is-valid'):''" 
+                                aria-describedby="categoriesFeedback" aria-labelledby="catDropdown">
                                 <li v-for="c in this.categoriesStore.categories"><a class="dropdown-item" @click="setCat($event, c.attributes.name)">{{ c.attributes.name }}</a></li>
                             </ul>
+                            <div id="categoriesFeedback" class="invalid-feedback">
+                                Devi selezionare una categoria
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="formDescription">Descrizione</label> 
-                            <textarea  class="form-control" type="text" id="formDescription" rows="8" v-model="description" multiple></textarea>
+                            <textarea :class="this.submitted ? (this.descriptionError ? 'is-invalid' : 'is-valid'):''" class="form-control" type="text"
+                             id="formDescription" rows="8" v-model="description" multiple></textarea>
+                            <div id="descriptionFeedback" class="invalid-feedback">
+                                La descrizione non può essere vuota e deve contenere almeno 5 caratteri.
+                            </div>
                         </div>
                         <div class="form-group mb-3">
                             <label for="formPhone" class="form-label">Numero di Telefono</label>
@@ -85,13 +97,20 @@
                 category:'',
                 images:[],
                 categoriesStore: Object,
-                isLogged: false
+                isLogged: false,
+                catError: false,
+                titleError: false,
+                descriptionError: false,
+                priceError: false,
+                submitted: false
             }
         },
         created(){
             this.categoriesStore = useCategoriesStore();
+            this.categoriesStore.initialise();
 
-            this.isLogged = useUserStore !== null && useUserStore().jwt !== undefined && useUserStore().jwt !== '';
+
+            this.isLogged = useUserStore().jwt !== null && useUserStore().jwt !== undefined && useUserStore().jwt !== '';
         },
         methods: {
             nextImage(e){
@@ -130,6 +149,8 @@
 
                 let jsonImages = [];
 
+                this.submitted = true;
+
                 if(this.images.length > 0){
                     const formData = new FormData();
                 
@@ -145,50 +166,71 @@
                         this.images = []
                         data.value.forEach( (el) => this.images.push(el.id) )
 
-                        this.images.forEach( (img) =>  jsonImages.push({ id:img }))
+                        this.images.forEach( (img) => jsonImages.push({ id:img }))
                     }catch(err){
                         console.log("Something wrong in image upload");
                         console.log(err)
                     }
                 }
 
+                this.catError = false;
+                let catId;
                 try{
-                    const catId = useCategoriesStore().categories.filter( (el) => el.attributes.name === this.category )[0].id
+                    catId = this.categoriesStore.categories.filter( (el) => el.attributes.name === this.category )[0].id
+                }catch(err){
+                    catId = -1
+                    this.catError = true;
+                }
 
-                    const userId = useUserStore().user.id
-                    console.log("user id",userId)
+                const userId = useUserStore().user.id
+                console.log("user id",userId)
 
+                const { data, pending, error, refresh } = await useFetch("http://localhost:1337/api/listings", 
+                {
+                    method: "POST",
+                    body:{
+                        data:{
+                            title: this.title,
+                            description: this.description,
+                            email: this.email,
+                            phone: this.phone,
+                            price: this.price,
+                            images: jsonImages,
+                            category: catId,
+                            madeby: userId,
+                            }
+                    },
+                    headers:{               
+                        Authorization:
+                        `Bearer ${useUserStore().jwt}`
+                    }
+                });
+
+                if(error.value !== null){
+                    alert("Errore nell'inserimento dell'annuncio")
                     
-                    const { data, pending, error, refresh } = await useFetch("http://localhost:1337/api/listings", 
-                    {
-                        method: "POST",
-                        body:{
-                            data:{
-                                title: this.title,
-                                description: this.description,
-                                email: this.email,
-                                phone: this.phone,
-                                price: this.price,
-                                images: jsonImages,
-                                category: catId,
-                                madeby: userId
-                                }
-                        },
-                        headers:{               
-                            Authorization:
-                            `Bearer ${useUserStore().jwt}`
-                        }
-                    });
+                    //title, description, price
+                    const errors = error.value.data.error.details.errors;
 
+                    this.titleError = false;
+                    this.descriptionError = false;
+                    this.priceError = false;
+
+                    console.log(errors)
+                    errors.forEach( (err) => {
+                        this.titleError = this.titleError || err.message.includes('title');
+                        this.descriptionError = this.descriptionError || err.message.includes('description');
+                        this.priceError = this.priceError || err.message.includes('price');
+                    } )
+
+                    console.log("errors", this.titleError, this.descriptionError, this.priceError)
+                }else{
                     console.log(data)
                     console.log("listing id", data.value.data.id)
 
                     if(!alert("Annuncio inserito correttamente")){
                         navigateTo({path:`/listing/${data.value.data.id}`})
                     }
-                }catch(err){
-                    alert("Errore nell'inserimento dell'annuncio")
-                    console.log(err)
                 }
             },
             readAndPreview(file) {
