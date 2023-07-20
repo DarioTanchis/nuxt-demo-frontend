@@ -60,7 +60,8 @@ import axios from 'axios';
         const filtered = ls.filter( l => state === undefined || (
             (state.search === undefined || state.search === '' || l.attributes.title.includes(state.search)) && 
             (state.category === '' || l.attributes.category.data.attributes.name === state.category) &&
-            (state.viewOwnListings === false ? (l.attributes.madeby == null || l.attributes.madeby.data == null || l.attributes.madeby.data.id !== userStore.user.id) : 
+            (state.viewOwnListings === false ? (l.attributes.madeby == null || l.attributes.madeby.data == null || 
+            userStore.user === null || userStore.user === undefined || l.attributes.madeby.data.id !== userStore.user.id) : 
         l.attributes.madeby == null || l.attributes.madeby.data !== null && l.attributes.madeby.data.id === userStore.user.id)))
 
         console.log("filtered listings", filtered)

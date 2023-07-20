@@ -10,18 +10,20 @@
                             <input v-model="title" class="form-control" type="text" id="formTitle" multiple>
                         </div>
 
-                        <div v-if="this.images !== undefined && this.images.length > 0" 
+                        <div v-if="this.imagesUrls.value !== undefined && this.imagesUrls.value.length > 0" 
                         id="carouselExampleControls" class="carousel slide" data-ride="carousel">
-                            <div v-for="(img, index) in this.imagesUrls" class="carousel-inner">
+                        {{ console.log("urls length", this.imagesUrls.value.length) }}
+                            <div v-for="(img, index) in this.imagesUrls.value" class="carousel-inner">
+                                {{ console.log("img",img) }}
                                 <div class="carousel-item" :class=" index === this.imageIndex ? 'active' : ''">
                                     <img class="d-block card-img-top" :src="img">
                                 </div>
                             </div>
-                            <a v-if="this.imagesUrls.length > 1" class="carousel-control-prev" @click="prevImage" role="button" data-slide="prev">
+                            <a v-if="this.imagesUrls.value.length > 1" class="carousel-control-prev" @click="prevImage" role="button" data-slide="prev">
                                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                                 <span class="sr-only">Previous</span>
                             </a>
-                            <a v-if="this.imagesUrls.length > 1" class="carousel-control-next" @click="nextImage" role="button" data-slide="next">
+                            <a v-if="this.imagesUrls.value.length > 1" class="carousel-control-next" @click="nextImage" role="button" data-slide="next">
                                 <span class="carousel-control-next-icon" aria-hidden="true"></span>
                                 <span class="sr-only">Next</span>
                             </a>
@@ -71,29 +73,74 @@
 </template>
 
 <script>
+import { ref } from 'vue';
+
     export default{
         name: "Insert Listing",
         data(){
             return{
+                listing:Object,
                 imageIndex:0,
                 title:'',
                 description:'',
                 price:0,
                 phone:'',
                 email:'',
-                imagesUrls:[],
+                imagesUrls:ref([]),
                 category:'',
                 images:[],
                 categoriesStore: Object,
-                isLogged: false
+                isLogged: false,
+                id:-1
             }
         },
-        created(){
+        async created(){
             this.categoriesStore = useCategoriesStore();
 
             this.isLogged = useUserStore !== null && useUserStore().jwt !== undefined && useUserStore().jwt !== '';
+
+            const route = useRoute();
+
+            this.id = route.params.id;
+
+            useUserStore().initialise();
+
+            this.listing = await this.getListing();
+
+            console.log("listing",this.listing)
+
+            this.title = this.listing.data.attributes.title;
+            this.description = this.listing.data.attributes.description;
+            this.email = this.listing.data.attributes.email;
+            this.phone = this.listing.data.attributes.phone;
+            this.price = this.listing.data.attributes.price;
+            
+            console.log("cat id ", this.listing.data.attributes.category.data.id)
+            console.log("categories", this.categoriesStore.categories)
+            this.category = this.categoriesStore.categories.filter( (el) => el.id === this.listing.data.attributes.category.data.id )[0].attributes.name
+            
+            console.log("listing images", this.listing.data.attributes.images)
+            
+            this.images = this.listing.data.attributes.images;
+            this.imagesUrls.value = this.listing.data.attributes.images.data.map( (img) => "http://localhost:1337" + img.attributes.url )
+
+            console.log("img urls",this.imagesUrls)
         },
         methods: {
+            async getListing(){
+                const { data, pending, error, refresh } = await useFetch(`http://localhost:1337/api/listings/${this.id}?populate=images,madeby,category`, 
+                { 
+                    method:"GET",
+                    headers:{               
+                        Authorization:
+                        `Bearer ${useUserStore().jwt}`
+                    }
+                })
+
+                console.log(data)
+            
+                return data;
+            },
             nextImage(e){
                 e.preventDefault();
 
@@ -140,7 +187,7 @@
                     try{
                         const { data, pending, error, refresh } = await useFetch("http://localhost:1337/api/upload", { method:"POST", body:formData })
       
-                        console.log(data)
+                        console.log("images data", data)
 
                         this.images = []
                         data.value.forEach( (el) => this.images.push(el.id) )
@@ -159,9 +206,9 @@
                     console.log("user id",userId)
 
                     
-                    const { data, pending, error, refresh } = await useFetch("http://localhost:1337/api/listings", 
+                    const { data, pending, error, refresh } = await useFetch(`http://localhost:1337/api/listings/${this.id}`, 
                     {
-                        method: "POST",
+                        method: "PUT",
                         body:{
                             data:{
                                 title: this.title,
@@ -175,16 +222,15 @@
                                 }
                         },
                         headers:{               
-                            Authorization:
-                            `Bearer ${useUserStore().jwt}`
+                            Authorization: `Bearer ${useUserStore().jwt}`,
+                            "Content-type": 'application/json'
                         }
                     });
 
-                    console.log(data)
-                    console.log("listing id", data.value.data.id)
+                    console.log("data",data)
 
                     if(!alert("Annuncio inserito correttamente")){
-                        navigateTo({path:`/listing/${data.value.data.id}`})
+                        //navigateTo({path:`/listing/${data.value.data.id}`})
                     }
                 }catch(err){
                     alert("Errore nell'inserimento dell'annuncio")

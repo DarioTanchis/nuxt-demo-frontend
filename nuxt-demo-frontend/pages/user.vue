@@ -13,7 +13,10 @@
                                 style="max-width: 5rem; max-height: 4rem; border-radius: .5rem;"></div>
                             <div>{{ l.attributes.title }}</div>
                             <div>{{ l.attributes.price === 0 ? 'Gratis' : l.attributes.price }}</div>
-                            <div><button class="btn btn-danger" @click="deleteListing($event, l.id)">Elimina</button></div>
+                            <div class=" hstack gap-3">
+                                <button class="btn btn-primary" @click="editListing($event, l.id)">Modifica</button>
+                                <button class="btn btn-danger" @click="deleteListing($event, l.id)">Elimina</button>
+                            </div>
                         </div>
                         <hr v-if="i < listings.length - 1">
                     </div>
@@ -27,16 +30,24 @@
 </template>
 
 <script setup>
+    console.log("Home")
+
     import axios from 'axios';
 
     const listings = ref( [] )
 
     onMounted( async () => {
-        useUserStore().initialise();
+        const userStore = useUserStore();
 
-        listings.value = await getListings();
+        userStore.initialise();
+        try{
 
-        console.log("listings", listings)
+            listings.value = await getListings();
+
+            console.log("listings", listings)
+        }catch(err){
+            
+        }
     } )
 
     async function getListings(){
@@ -58,6 +69,7 @@
     };
 
     async function deleteListing(e, id){
+        console.log(e)
         e.preventDefault();
         
         try{
@@ -73,6 +85,12 @@
         catch(err){
             alert("errore")
         }
+    }
+
+    async function editListing(e, id){
+        e.preventDefault();
+        
+        navigateTo(`/editListing/${id}`)
     }
 
     async function viewListing(e, listing){

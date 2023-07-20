@@ -49,6 +49,25 @@
                                 {{ listing.phone }}
                             </div>
                         </div>
+                        <ClientOnly>
+                            <div v-if="listing.madeby !== undefined && listing.madeby.data !== undefined 
+                            && listing.madeby.data !== null && listing.madeby !== ''" class="row">
+                                <div class="col-md-auto">
+
+                                    {{ console.log("madeby", listing.madeby) }}
+                                    Pubblicato da {{ listing.madeby.data.attributes.username }}
+                                </div>
+                            </div>
+                            <div class="row" v-if="listing.madeby !== undefined && listing.madeby.data.id === userStore.user.id">
+                                <div class="col-md-auto" style="padding-top: 2rem;">
+                                    <div class=" hstack gap-3">
+                                        <button class="btn btn-primary" @click="editListing($event, l.id)">Modifica</button>
+                                        <button class="btn btn-danger" @click="deleteListing($event, l.id)">Elimina</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </ClientOnly>
                     </div>
                 </div>
             </div>
@@ -62,14 +81,23 @@
     console.log(route.params)
     const { id } = route.params;
     const index = ref(0);
+
+    let userStore = null;
+
     let listing = await fetchListing();
 
+    onMounted( async () => {
+        userStore = useUserStore();
+
+        userStore.initialise();
+    });
+
     async function fetchListing(){
-        const res = await fetch("http://127.0.0.1:1337/api/listings/"+route.params.id+"?populate=images" )
+        const { data, pending, error, refresh } = await useFetch("http://127.0.0.1:1337/api/listings/"+route.params.id+"?populate=images,madeby")
 
-        const data = await res.json();
+        console.log("listing data",data)
 
-        return data.data.attributes;
+        return data.value.data.attributes;
     };
 
     function nextImage(e){
