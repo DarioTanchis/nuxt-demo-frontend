@@ -16,7 +16,8 @@ export default defineNuxtConfig({
     renderJsonPayloads: false
   },
   routeRules:{
-    '/': { ssr:false }
+    '/': { ssr:false },
+    '/user': { ssr:false }
   },
   imports: {
     dirs: ["stores"],

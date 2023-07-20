@@ -71,6 +71,8 @@
 </template>
 
 <script>
+    import axios from 'axios';
+
     export default{
         name: "Insert Listing",
         data(){
@@ -139,7 +141,7 @@
 
                     try{
                         const { data, pending, error, refresh } = await useFetch("http://localhost:1337/api/upload", { method:"POST", body:formData })
-
+      
                         console.log(data)
 
                         this.images = []
@@ -156,8 +158,9 @@
                     const catId = useCategoriesStore().categories.filter( (el) => el.attributes.name === this.category )[0].id
 
                     const userId = useUserStore().user.id
-                    console.log(userId)
+                    console.log("user id",userId)
 
+                    
                     const { data, pending, error, refresh } = await useFetch("http://localhost:1337/api/listings", 
                     {
                         method: "POST",
@@ -170,7 +173,7 @@
                                 price: this.price,
                                 images: jsonImages,
                                 category: catId,
-                                user: userId
+                                madeby: userId
                                 }
                         },
                         headers:{               

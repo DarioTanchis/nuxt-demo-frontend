@@ -148,99 +148,11 @@
         await navigateTo({ path: '/insertListing' })
     };
 
-    function ViewOwnListings(e){
+    async function ViewOwnListings(e){
         e.preventDefault();
 
-        searchStore.setViewOwnListings();
+        await navigateTo({ path: `/user` })
     };
-/*
-    import { useUserStore } from "@/stores/user";
-    import { useSearchStore } from '@/stores/search';
-    import { useCategoriesStore } from '@/stores/categories'
-
-    const userStore = useUserStore($pinia);
-    const searchStore = useSearchStore($pinia);
-
-    export default{
-        name:"BSNavbar",
-        data(){
-            return{
-                categories: Array,
-                isHome: Boolean,
-                isLogin: Boolean,
-                isSignup: Boolean,
-                isInsertListing: Boolean,
-                searchString:'',
-                category:'',
-                isSignedIn: false
-            }
-        },
-        async created(){
-            this.categories = await this.fetchCategories();
-            
-            useCategoriesStore().$patch( {categories: this.categories} )
-
-            this.searchString = this.searchStore.search;
-            this.category = this.searchStore.category;
-        },
-        methods:{
-            async fetchCategories(){
-                const res = await fetch("http://localhost:1337/api/categories")
-
-                const data = await res.json();
-
-                return data.data;
-            },
-            goToLogin(e){
-                e.preventDefault();
-
-                router.push({name:'login'});
-            },
-            goToSignup(e){
-                e.preventDefault();
-                
-                router.push({name:'signup'})
-
-                console.log("go to signup")
-            },
-            goToHome(e){
-                e.preventDefault();
-                
-                router.push({name:'home'})
-
-                console.log("go to home")
-            },
-            logout(e){
-                e.preventDefault();
-
-                this.isSignedIn = false
-
-                this.userStore.Logout();
-            },
-            Search(e){
-                e.preventDefault();
-
-                this.searchStore.setSearch(this.searchString)
-            },
-            CategoryFilter(e, cat){
-                e.preventDefault();
-
-                this.category = cat
-
-                this.searchStore.setCat(cat);
-            },
-            InsertListing(e){
-                e.preventDefault();
-
-                this.$router.push( { name:"insertListing" } )
-            },
-            ViewOwnListings(e){
-                e.preventDefault();
-
-                this.searchStore.setViewOwnListings();
-            }
-        },
-    }*/
 </script>
 
 <style>
